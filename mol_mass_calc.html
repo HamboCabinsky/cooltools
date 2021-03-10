@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Molar Mass Calculator</h2>
+
+<p>
+Enter the molecular formula in the field, then click "Submit" to calculate:<br>
+(Elements must be capitalized correctly, example input: NaOH, H2SO4)
+</p>
+
+<form id="frm1">
+  Molecular Formula: <input type="text" name="formula"><br><br>
+  <input type="button" onclick="compute_mass(this.form)" value="Submit">
+</form>
+<p id="solution"></p>
+
+<script>
+
+function compute_mass(form) 
+{
+	var toProcess = form.elements["formula"].value;
+	var mass = 0;
+	var curr_str = "";
+	for(var i = 0; i < toProcess.length; i++)
+	{
+		c = toProcess.charAt(i);
+		if(c >= '0' && c <= '9')
+		{
+			var start = i;
+			while(c >= '0' && c <= '9')
+			{
+				i++;
+				c = toProcess.charAt(i);
+			}
+			mass += chem_dict[curr_str] * parseInt(toProcess.substring(start, i));
+			i--;
+			curr_str = "";
+		}
+		else if(c >= 'A' && c <= 'Z' && curr_str != "")
+		{
+			mass += chem_dict[curr_str];
+			curr_str = "";
+			i--;
+		}
+		else
+		{
+			curr_str += toProcess.charAt(i);
+		}
+	}
+	if(curr_str != "")
+	{
+		mass += chem_dict[curr_str];
+	}
+	document.getElementById("solution").innerHTML = "Computed molar mass: " + mass;
+}
+
+var chem_dict = {};
+chem_dict["H"] = 1.008;
+chem_dict["He"] = 4.0026;
+chem_dict["Li"] = 6.94;
+chem_dict["Be"] = 9.0122;
+chem_dict["B"] = 10.81;
+chem_dict["C"] = 12.011;
+chem_dict["N"] = 14.007;
+chem_dict["O"] = 15.999;
+chem_dict["F"] = 18.998;
+chem_dict["Ne"] = 20.180;
+chem_dict["Na"] = 22.990;
+chem_dict["Mg"] = 24.305;
+chem_dict["Al"] = 26.982;
+chem_dict["Si"] = 28.085;
+chem_dict["P"] = 30.974;
+chem_dict["S"] = 32.06;
+chem_dict["Cl"] = 35.45;
+chem_dict["Ar"] = 39.948;
+chem_dict["K"] = 39.098;
+chem_dict["Ca"] = 40.078;
+chem_dict["Sc"] = 44.956;
+chem_dict["Ti"] = 47.867;
+chem_dict["V"] = 50.942;
+chem_dict["Cr"] = 51.996;
+chem_dict["Mn"] = 54.938;
+chem_dict["Fe"] = 55.845;
+chem_dict["Co"] = 58.933;
+chem_dict["Ni"] = 58.693;
+chem_dict["Cu"] = 63.546;
+chem_dict["Zn"] = 65.38;
+chem_dict["Ga"] = 69.723;
+chem_dict["Ge"] = 72.630;
+chem_dict["As"] = 74.922;
+chem_dict["Se"] = 78.971;
+chem_dict["Br"] = 79.904;
+chem_dict["Kr"] = 83.798;
+chem_dict["Rb"] = 85.468;
+chem_dict["Sr"] = 87.62;
+chem_dict["Y"] = 88.906;
+chem_dict["Zr"] = 91.224;
+chem_dict["Nb"] = 92.906;
+chem_dict["Mo"] = 95.95;
+chem_dict["Tc"] = 98;
+chem_dict["Ru"] = 101.07;
+chem_dict["Rh"] = 102.91;
+chem_dict["Pd"] = 106.42;
+chem_dict["Ag"] = 107.87;
+chem_dict["Cd"] = 112.41;
+chem_dict["In"] = 114.82;
+chem_dict["Sn"] = 118.71;
+chem_dict["Sb"] = 121.76;
+chem_dict["Te"] = 127.60;
+chem_dict["I"] = 126.90;
+chem_dict["Xe"] = 131.29;
+chem_dict["Cs"] = 132.91;
+chem_dict["Ba"] = 137.33;
+chem_dict["La"] = 138.91;
+chem_dict["Ce"] = 140.12;
+chem_dict["Pr"] = 140.91;
+chem_dict["Nd"] = 144.24;
+chem_dict["Pm"] = 145;
+chem_dict["Sm"] = 150.36;
+chem_dict["Eu"] = 151.96;
+chem_dict["Gd"] = 157.25;
+chem_dict["Tb"] = 158.93;
+chem_dict["Dy"] = 162.50;
+chem_dict["Ho"] = 164.93;
+chem_dict["Er"] = 167.26;
+chem_dict["Tm"] = 168.93;
+chem_dict["Yb"] = 173.05;
+chem_dict["Lu"] = 174.97;
+chem_dict["Hf"] = 178.49;
+chem_dict["Ta"] = 180.95;
+chem_dict["W"] = 183.84;
+chem_dict["Re"] = 186.21;
+chem_dict["Os"] = 190.23;
+chem_dict["Ir"] = 192.22;
+chem_dict["Pt"] = 195.08;
+chem_dict["Au"] = 196.97;
+chem_dict["Hg"] = 200.59;
+chem_dict["Tl"] = 204.38;
+chem_dict["Pb"] = 207.2;
+chem_dict["Bi"] = 208.98;
+chem_dict["Po"] = 209;
+chem_dict["At"] = 210;
+chem_dict["Rn"] = 222;
+chem_dict["Fr"] = 223;
+chem_dict["Ra"] = 226;
+chem_dict["Ac"] = 227;
+chem_dict["Th"] = 232.04;
+chem_dict["Pa"] = 231.04;
+chem_dict["U"] = 238.03;
+chem_dict["Np"] = 237;
+chem_dict["Pu"] = 244;
+</script>
+
+</body>
+</html>

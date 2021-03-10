@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perlin Painter</title>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.min.js"></script>
+</head>
+<body>
+  <main>
+  </main>
+</body>
+<script>
+    //making a Brush class as an IIFE
+    let Brush = (function(){
+
+      //brush constructor
+      let brush = function(off = 0){
+        this.xoff1 = 0 + off;
+        this.xoff2 = 5000 + off;
+        this.roff = 10000 + off;
+        this.goff = 15000 + off;
+        this.boff = 20000 + off;
+        this.x = 0;
+        this.y = 0;
+        this.r = 0;
+        this.g = 0;
+        this.b = 0;
+      };
+
+      //get new positions and color values
+      brush.prototype.update = function(){
+        this.x = noise(this.xoff1)*width;
+        this.y = noise(this.xoff2)*height;
+        this.r = noise(this.roff)*255;
+        this.g = noise(this.goff)*255;
+        this.b = noise(this.boff)*255;
+        
+        this.xoff1 += 0.01;
+        this.xoff2 += 0.01;
+
+        this.roff += 0.01;
+        this.goff += 0.01;
+        this.boff += 0.01;
+      };
+
+      //paints an ellipse on the screen using our x,y values for pos
+      // and our rgb values for color
+      brush.prototype.show = function(){
+        noStroke(); // no outline
+        fill(color(this.r,this.g,this.b)); //prep paint with our chosen color
+        ellipse(this.x,this.y,24,24); //paint the ellipse
+      };
+
+      return brush;
+    })();
+    //END BRUSH CLASS
+
+    //making brush variable
+    let brush;
+    //let brush2;
+
+    //p5 function performed once on load
+  	function setup() {
+  		createCanvas(400, 400);
+      background(0);
+      brush = new Brush();
+      //brush2 = new Brush(25000);
+    }
+
+    //p5 function called every frame
+    function draw() {
+      brush.update();
+      brush.show();
+      //brush2.update();
+      //brush2.show();
+    }
+</script>
+</html>

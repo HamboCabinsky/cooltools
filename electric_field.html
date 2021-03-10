@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Electric Field Produced by Point of Charge Calculator</h2>
+
+<p>Enter the charge and distance from point of charge as floats and the powers of 10 you are multiplying by as integers, then click "Submit" to calculate:</p>
+
+<form id="pt_charge">
+  Charge: <input type="text" name="charge"> * 10 ^ <input type="text" name="c_pow" size="3"> C
+  <br>
+  Dist:&emsp;&ensp;<input type="text" name="dist"> * 10 ^ <input type="text" name="d_pow" size="3"> m
+  <br><br>
+  <input type="button" onclick="pt_charge(this.form)" value="Submit">
+</form>
+<p id="pt_ch_sol"></p>
+
+<h2>Electric Force Between Particles Calculator</h2>
+
+<p>Enter the charges and distance between charges as floats and the powers of 10 you are multiplying by as integers, then click "Submit" to calculate:</p>
+
+<form id="force">
+  Charge 1: <input type="text" name="charge1"> * 10 ^ <input type="text" name="c1_pow" size="3"> C
+  <br>
+  Charge 2: <input type="text" name="charge2"> * 10 ^ <input type="text" name="c2_pow" size="3"> C
+  <br>
+  Dist:&emsp;&emsp;&nbsp;<input type="text" name="dist"> * 10 ^ <input type="text" name="d_pow" size="3"> m
+  <br><br>
+  <input type="button" onclick="force(this.form)" value="Submit">
+</form>
+<p id="force_sol"></p>
+
+<h2>Electric Field Produced by Ring of Charge Calculator</h2>
+
+<p>Enter the charge of the ring, the distance away from the ring along the central axis of the ring, and the radius of the ring as floats. Enter the powers of 10 you are multiplying by as integers. Then, click "Submit" to calculate:</p>
+
+<form id="ring">
+  Charge: <input type="text" name="charge"> * 10 ^ <input type="text" name="c_pow" size="3"> C
+  <br>
+  Dist:&emsp;&ensp;<input type="text" name="dist"> * 10 ^ <input type="text" name="d_pow" size="3"> m
+  <br>
+  Radius: <input type="text" name="radius"> * 10 ^ <input type="text" name="r_pow" size="3"> m
+  <br><br>
+  <input type="button" onclick="ring(this.form)" value="Submit">
+</form>
+<p id="ring_sol"></p>
+
+<script>
+var p = 8.85 * 10 ** -12;
+function pt_charge(form) {
+  var numerator = parseFloat(form.elements["charge"].value) * 10 ** (parseInt(form.elements["c_pow"].value));
+  var denominator = 4 * Math.PI * p * (parseFloat(form.elements["dist"].value) * 10 ** (parseInt(form.elements["d_pow"].value)))**2;
+  document.getElementById("pt_ch_sol").innerHTML = numerator/denominator + " N/C";
+}
+function force(form) {
+  var numerator = parseFloat(form.elements["charge1"].value) * 10 ** (parseInt(form.elements["c1_pow"].value)) * parseFloat(form.elements["charge2"].value) * 10 ** (parseInt(form.elements["c2_pow"].value));
+  var denominator = 4 * Math.PI * p * (parseFloat(form.elements["dist"].value) * 10 ** (parseInt(form.elements["d_pow"].value)))**2;
+  document.getElementById("force_sol").innerHTML = numerator/denominator + " N";
+}
+function ring(form){
+  var num_10_pow = parseInt(form.elements["c_pow"].value) + parseInt(form.elements["d_pow"].value);
+  var k = 1/(4*Math.PI*p);
+  var z = parseFloat(form.elements["dist"].value) * 10 ** parseInt(form.elements["d_pow"].value);
+  var r = parseFloat(form.elements["radius"].value) * 10 ** parseInt(form.elements["r_pow"].value);
+  var numerator = k * parseFloat(form.elements["charge"].value) * parseFloat(form.elements["dist"].value) * 10 ** num_10_pow;
+  var denominator = (z**2 + r**2)**(3/2);
+  document.getElementById("ring_sol").innerHTML = numerator/denominator + " N/C";
+}
+</script>
+
+</body>
+</html>
