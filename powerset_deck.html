@@ -178,8 +178,7 @@
       //  producable with the given set of cards
       cardset.prototype.play_freq_distribution = function()
       {
-        let card_set = this.cards;
-        let plays = this.all_possible_plays(card_set);
+        let plays = this.all_possible_plays();
         let play_freq_dict = {};
         for(let i = 0; i < plays.length; i++){
           if(play_freq_dict[plays[i]]){
@@ -194,18 +193,6 @@
         //custom defined comparator to sort by 2nd element of each []
         scores.sort((first, second) => second[1]-first[1]);
         return scores;
-      };
-
-      cardset.prototype.print_freq_distribution = function()
-      {
-        let card_set = this.cards;
-        let freq_dist = this.play_freq_distribution(card_set);
-        for(let score in freq_dist)
-        {
-          
-          console.log("The score "+score+" can be produced "+freq_dist[score]+" ways with the card set: "+card_set);
-
-        }
       };
 
       return cardset;
