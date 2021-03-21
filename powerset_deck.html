@@ -20,6 +20,7 @@
 </body>
 
 <script>
+
     //Takes a given set (as an array) and returns every possible subset of it
     //  as an array of arrays
     function powerset(uniSet){
@@ -52,134 +53,164 @@
       return set_list;
     };
 
-    //default numerical values assigned to each card, either a single 
-    //  int or an array of 2 ints to signify that the card can have either value
-    //    depending on the situation (as is common with the ace in many games)
-    //      TODO: Make these values accessibly changeable by user
-    let card_values = {
-      "2":2,
-      "3":3,
-      "4":4,
-      "5":5,
-      "6":6,
-      "7":7,
-      "8":8,
-      "9":9,
-      "10":10,
-      "J":11,
-      "Q":12,
-      "K":13,
-      "A":[1,11]
-    };
+    //IIFE Class Definition to avoid global namespace pollution
+    let CardSet = (function(){
 
-    //Designed primarily to aid the all_possible_plays function below
-    //  takes a list representing card values for a given play, cards
-    //    that only have 1 possible value are represented by ints, while
-    //      cards w/ 2 possible values are len 2 int[]s. Returns all possible
-    //        ways the play can be scored. (ex: [1,3,[1,11]] => [5,15]; 
-    //          [1,[1,11],[2,3]] => [4,14,5,15]) (# of scores returned is 2^(#int[]s))
-    function evaluate_play(subSet)
-    {
-      //will abort if null array passed (occurs when conv2Scores fails)
-      if(subSet == null)  return;
-      
-      //each 2 element list representing a card that can be one
-      //  of 2 possible score values (as is common with the ace)
-      let binary_cards = [];
+      //    -- Class Constructor for CardSet Class --
+      //default numerical values are assigned to each card, either a single 
+      //  int or an array of 2 ints to signify that the card can have either value
+      //    depending on the situation (as is common with the ace in many games)
+      let cardset = function(card_set){
+        this.cards = card_set;
+      };
 
-      //all possible sums that could result from this play
-      let sums = [];
+      let card_values = {
+          "2":2,
+          "3":3,
+          "4":4,
+          "5":5,
+          "6":6,
+          "7":7,
+          "8":8,
+          "9":9,
+          "10":10,
+          "J":11,
+          "Q":12,
+          "K":13,
+          "A":[1,11]
+      };
 
-      //will hold our sum of the ints in the subset w/o any binary cards
-      let initial_sum = 0;
+      cardset.prototype.get_card_values = function(){
+        return card_values;
+      };
 
-      //iterate through subset and add each integer to initial_sum
-      //  any element that is not int should be 2 element int[], each
-      //    of those is pushed to binary_cards for further processing
-      subSet.forEach(element => Number.isInteger(element) ? initial_sum += element : binary_cards.push(element));
+      cardset.prototype.set_card_value = function(key, value){
+        card_values[key] = value;
+      };
 
-      //same concept as powerset, for each bin card we can choose 1 of 2
-      //  values to add to the sum, so there are 2 ^ (# bin cards) 
-      //    possible scores that can be produced from each hand
-      let possible_sums = 2 ** binary_cards.length;
-
-      for(let i = 0; i < possible_sums; i++){
-        //will start w/ sum of integer elements
-        let new_sum = initial_sum;
-
-        for(let j = 0; j < binary_cards.length; j++){
-          //if the bit is set in i (curr number), add the second
-          //  possible card value, otherwise add the first
-          if((1 << j)&i){
-            new_sum += binary_cards[j][1];
-          }else{
-            new_sum += binary_cards[j][0];
+      //Helper function for all_possible_plays, simply converts
+      //  str[] of card names to an int/[] array of corresponding score values
+      function conv2Scores(subSet)
+      {
+        for(let i = 0; i < subSet.length; i++){
+          let card = subSet[i];
+          subSet[i] = card_values[subSet[i]];
+          if(!subSet[i]){
+            console.log("No value defined for card: " + card);
+            return null;
           }
         }
+        return subSet;
+      };
 
-        sums.push(new_sum);
-      }
-
-      return sums;
-    };
-
-    //another helper function for all_possible_plays, simply converts
-    //  str[] of card names to an int/[] array of corresponding score values
-    function conv2Scores(subSet)
-    {
-      for(let i = 0; i < subSet.length; i++){
-        let card = subSet[i];
-        subSet[i] = card_values[subSet[i]];
-        if(!subSet[i]){
-          console.log("No value defined for card: " + card);
-          return null;
-        }
-      }
-      return subSet;
-    };
-
-    //Takes a list of strings representing a set of cards and computes every
-    //  possible score values one could play with the given set of cards
-    function all_possible_plays(card_set)
-    {
-      //will hold every possible score producible w/ given cards
-      let play_set = [];
-      //every possible combination of cards that can be played
-      let pSet = powerset(card_set);
-
-      //call evaluate_play on each subset to get all possible card
-      //  scorings for each hand, then push every element that is
-      //    returned onto a list of all possible scorings (... expands arr, to
-      //      allow the pushing of multiple items. Similar to Python list extension)
-      pSet.forEach(subSet => play_set.push(...evaluate_play(conv2Scores(subSet))));
-
-      return play_set;
-    };
-
-    function play_freq_distribution(card_set)
-    {
-      let plays = all_possible_plays(card_set);
-      let play_freq_dict = {};
-      for(let i = 0; i < plays.length; i++){
-        if(play_freq_dict[plays[i]]){
-          play_freq_dict[plays[i]] += 1;
-        }else{
-          play_freq_dict[plays[i]] = 1;
-        }
-      }
-      return play_freq_dict;
-    };
-
-    function print_freq_distribution(card_set)
-    {
-      let freq_dist = play_freq_distribution(card_set);
-      for(let score in freq_dist)
+      //Designed primarily to aid the all_possible_plays function below
+      //  takes a list representing card values for a given play, cards
+      //    that only have 1 possible value are represented by ints, while
+      //      cards w/ 2 possible values are len 2 int[]s. Returns all possible
+      //        ways the play can be scored. (ex: [1,3,[1,11]] => [5,15]; 
+      //          [1,[1,11],[2,3]] => [4,14,5,15]) (# of scores returned is 2^(#int[]s))
+      function evaluate_play(subSet)
       {
+        //will abort if null array passed (occurs when conv2Scores fails)
+        if(subSet == null)  return;
 
-        console.log("The score " + score + "can be produced " + freq_dist[score])
-      }
-    }
+        //each 2 element list representing a card that can be one
+        //  of 2 possible score values (as is common with the ace)
+        let binary_cards = [];
 
+        //all possible sums that could result from this play
+        let sums = [];
+
+        //will hold our sum of the ints in the subset w/o any binary cards
+        let initial_sum = 0;
+
+        //iterate through subset and add each integer to initial_sum
+        //  any element that is not int should be 2 element int[], each
+        //    of those is pushed to binary_cards for further processing
+        subSet.forEach(element => Number.isInteger(element) ? initial_sum += element : binary_cards.push(element));
+
+        //same concept as powerset, for each bin card we can choose 1 of 2
+        //  values to add to the sum, so there are 2 ^ (# bin cards) 
+        //    possible scores that can be produced from each hand
+        let possible_sums = 2 ** binary_cards.length;
+
+        for(let i = 0; i < possible_sums; i++){
+          //will start w/ sum of integer elements
+          let new_sum = initial_sum;
+
+          for(let j = 0; j < binary_cards.length; j++){
+            //if the bit is set in i (curr number), add the second
+            //  possible card value, otherwise add the first
+            if((1 << j)&i){
+              new_sum += binary_cards[j][1];
+            }else{
+              new_sum += binary_cards[j][0];
+            }
+          }
+
+          sums.push(new_sum);
+        }
+
+        return sums;
+      };
+
+
+      //Takes a list of strings representing a set of cards and computes every
+      //  possible score value one could play with the given set of cards
+      cardset.prototype.all_possible_plays = function()
+      {
+        let card_set = this.cards;
+        //will hold every possible score producible w/ given cards
+        let play_set = [];
+        //every possible combination of cards that can be played
+        let pSet = powerset(card_set);
+
+        //call evaluate_play on each subset to get all possible card
+        //  scorings for each hand, then push every element that is
+        //    returned onto a list of all possible scorings (... expands arr, to
+        //      allow the pushing of multiple items. Similar to Python list extension)
+        pSet.forEach(subSet => play_set.push(...evaluate_play(conv2Scores(subSet))));
+
+        return play_set;
+      };
+
+      //given a card_set, returns a frequency distribution of all possible scores
+      //  producable with the given set of cards
+      cardset.prototype.play_freq_distribution = function()
+      {
+        let card_set = this.cards;
+        let plays = this.all_possible_plays(card_set);
+        let play_freq_dict = {};
+        for(let i = 0; i < plays.length; i++){
+          if(play_freq_dict[plays[i]]){
+            play_freq_dict[plays[i]] += 1;
+          }else{
+            play_freq_dict[plays[i]] = 1;
+          }
+        }
+        //turns the dictionary into an array of arrays for sorting
+        let scores = Object.keys(play_freq_dict).map(key => [key,play_freq_dict[key]]);
+
+        //custom defined comparator to sort by 2nd element of each []
+        scores.sort((first, second) => second[1]-first[1]);
+        return scores;
+      };
+
+      cardset.prototype.print_freq_distribution = function()
+      {
+        let card_set = this.cards;
+        let freq_dist = this.play_freq_distribution(card_set);
+        for(let score in freq_dist)
+        {
+          
+          console.log("The score "+score+" can be produced "+freq_dist[score]+" ways with the card set: "+card_set);
+
+        }
+      };
+
+      return cardset;
+    })();
+    //END CARDSET CLASS
 
 
   	function setup() {
