@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>P5 Test</title>
+  <title>Guessing Game</title>
   <style>
     body {
       padding: 0;
@@ -60,10 +60,10 @@
       //default numerical values are assigned to each card, either a single 
       //  int or an array of 2 ints to signify that the card can have either value
       //    depending on the situation (as is common with the ace in many games)
-      let cardset = function(card_set){
+      let cardset = function(card_set=[]){
         this.cards = card_set;
       };
-
+      //Blackjack values by default
       let card_values = {
           "2":2,
           "3":3,
@@ -74,9 +74,9 @@
           "8":8,
           "9":9,
           "10":10,
-          "J":11,
-          "Q":12,
-          "K":13,
+          "J":10,
+          "Q":10,
+          "K":10,
           "A":[1,11]
       };
 
@@ -199,13 +199,119 @@
     })();
     //END CARDSET CLASS
 
+    let Deck = (function(){
+
+      let full_deck = ["A","A","A","A","K","K","K","K","Q","Q","Q","Q","J","J","J","J","10","10","10","10","9","9","9","9","8","8","8","8","7","7","7","7","6","6","6","6","5","5","5","5","4","4","4","4","3","3","3","3","2","2","2","2"];
+
+      let deck = function(cards=full_deck, pos=null){
+        this.cards = cards;
+        this.pos = pos;
+      };
+
+      //shuffles the card deck
+      deck.prototype.shuffle = function(){
+        for(let i = this.cards.length-1; i > 0; i--){
+          let j = Math.floor(Math.random() * i);
+          let temp = this.cards[j];
+          this.cards[j] = this.cards[i];
+          this.cards[i] = temp;
+        }
+      };
+
+      //splits this deck into an array of 2 decks and returns it
+      deck.prototype.split = function(){
+        let mid_ind = Math.floor(this.cards.length/2);
+        let d1 = new Deck(this.cards.slice(0,mid_ind));
+        let d2 = new Deck(this.cards.slice(mid_ind));
+        return [d1,d2];
+      };
+
+      deck.prototype.draw = function(){
+        return this.cards.pop();
+      };
+
+      deck.prototype.show = function(){
+        if(this.pos == null)  return;
+        fill(color(0,0,100));
+        rect(this.pos[0],this.pos[1],50,100);
+        fill(color(255,255,255));
+        text(this.cards.length,this.pos[0]+10,this.pos[1]+20);
+        text("Cards",this.pos[0]+10,this.pos[1]+40);
+        text("Left",this.pos[0]+10,this.pos[1]+60);
+
+      };
+
+      return deck;
+    })();
+    //END DECK CLASS
+
+    let Hand = (function(){
+
+      let hand = function(pos = null){
+        CardSet.call(this);
+        this.pos = pos;
+      };
+
+      hand.prototype = Object.create(CardSet.prototype);
+      hand.prototype.constructor = hand;
+
+      hand.prototype.add = function(card){
+        this.cards.push(card);
+      };
+
+      hand.prototype.remove = function(card){
+        let rem_index = this.cards.indexOf(card);
+        if(rem_index == -1) return null;
+        return this.cards.splice(rem_index,1)[0];
+      };
+
+      hand.prototype.show = function(){
+        if(this.pos == null)  return;
+        let curr_x = this.pos[0];
+        for(let i = 0; i < this.cards.length; i++)
+        {
+          fill(color(245,245,255));
+          rect(curr_x, this.pos[1], 50, 100);
+          fill(color(0,0,0));
+          text(this.cards[i],curr_x+5,this.pos[1]+10);
+          curr_x += 50;
+        }
+      };
+
+      return hand;
+    })();
+
+    let full_deck;
+    let player_decks;
+    let p1_hand;
+    let p2_hand;
+    let max_hand;
 
   	function setup() {
   		createCanvas(400, 400);
+      full_deck = new Deck();
+      full_deck.shuffle();
+      player_decks = full_deck.split();
+      
+      player_decks[0].pos = [width-90,height-150];
+      player_decks[1].pos = [40,50];
+
+      p1_hand = new Hand([50, height-150]);
+      p2_hand = new Hand([100,50]);
+
+      max_hand = 5;
+      for(let i = 0; i < max_hand; i++){
+        p1_hand.add(player_decks[0].draw());
+        p2_hand.add(player_decks[1].draw());
+      }      
+
     }
 
     function draw() {
-    	background(220);
+    	background(color(0,50,0));
+      player_decks.forEach(deck => deck.show());
+      p1_hand.show();
+      p2_hand.show();
     }
 
 </script>
