@@ -88,19 +88,31 @@
         card_values[key] = value;
       };
 
+      cardset.prototype.add = function(card){
+        this.cards.push(card);
+      };
+
+      cardset.prototype.remove = function(card){
+        let rem_index = this.cards.indexOf(card);
+        if(rem_index == -1) return null;
+        return this.cards.splice(rem_index,1)[0];
+      };
+
       //Helper function for all_possible_plays, simply converts
       //  str[] of card names to an int/[] array of corresponding score values
       function conv2Scores(subSet)
       {
+        let score_set = [];
+
         for(let i = 0; i < subSet.length; i++){
-          let card = subSet[i];
-          subSet[i] = card_values[subSet[i]];
-          if(!subSet[i]){
+          if(!card_values[subSet[i]]){
             console.log("No value defined for card: " + card);
             return null;
           }
+          score_set.push(card_values[subSet[i]]);
+          
         }
-        return subSet;
+        return score_set;
       };
 
       //Designed primarily to aid the all_possible_plays function below
@@ -195,6 +207,31 @@
         return scores;
       };
 
+      cardset.prototype.get_random_subset = function()
+      {
+       let rand_bitset = Math.floor((2 ** this.cards.length) * Math.random());
+       let subset = [];
+       for(let i = 0; i < this.cards.length; i++){
+          //checking each bit and adding corresponding elements from the
+          //  cards [] to subset if the bit is set
+          if((1 << i)&rand_bitset) subset.push(this.cards[i]);
+        }
+        return subset;
+      };
+
+      //returns a 2 element array containing A) an [] of a random number of 
+      //  random cards from the set and B) a random score that could be made
+      //    from subset of cards, b/c cards can have up to 2 values
+      cardset.prototype.get_random_play = function()
+      {
+        let played_cards = this.get_random_subset();
+        let possible_sums = evaluate_play(conv2Scores(played_cards));
+        let score_index = Math.floor(Math.random()*possible_sums.length);
+        //console.log(played_cards,possible_sums,score_index);
+        let score_played = possible_sums[score_index];
+        return [played_cards, score_played];
+      };
+
       return cardset;
     })();
     //END CARDSET CLASS
@@ -207,6 +244,9 @@
         this.cards = cards;
         this.pos = pos;
       };
+
+      deck.prototype = Object.create(CardSet.prototype);
+      deck.prototype.constructor = deck;
 
       //shuffles the card deck
       deck.prototype.shuffle = function(){
@@ -255,16 +295,6 @@
       hand.prototype = Object.create(CardSet.prototype);
       hand.prototype.constructor = hand;
 
-      hand.prototype.add = function(card){
-        this.cards.push(card);
-      };
-
-      hand.prototype.remove = function(card){
-        let rem_index = this.cards.indexOf(card);
-        if(rem_index == -1) return null;
-        return this.cards.splice(rem_index,1)[0];
-      };
-
       hand.prototype.show = function(){
         if(this.pos == null)  return;
         let curr_x = this.pos[0];
@@ -286,6 +316,9 @@
     let p1_hand;
     let p2_hand;
     let max_hand;
+    let input;
+    let button;
+    let status;
 
   	function setup() {
   		createCanvas(400, 400);
@@ -303,16 +336,53 @@
       for(let i = 0; i < max_hand; i++){
         p1_hand.add(player_decks[0].draw());
         p2_hand.add(player_decks[1].draw());
-      }      
+      } 
 
-    }
+      status = "";
+
+      label = createElement('p', 'Enter Guess:');
+      input = createInput();
+      button = createButton('Play Turn');
+      button.mousePressed(play_turn);
+
+    };
 
     function draw() {
     	background(color(0,50,0));
       player_decks.forEach(deck => deck.show());
       p1_hand.show();
       p2_hand.show();
-    }
+      fill(color(255,0,0));
+      text(status,width/5,height/2.2);
+    };
+
+    function play_turn(){
+      //get number input
+      let guess = parseInt(input.value(),10);
+      input.value('');
+      console.log(guess);
+      if(Number.isNaN(guess))  return;
+      //calculate AI's turn
+      let AI_turn = p2_hand.get_random_play();
+      console.log(AI_turn);
+      status = "AI played a " + AI_turn[1] + " You Guessed: " + guess;
+      
+      /*//compare against input
+      if(guess == AI_turn[1]){
+        player_decks[1].add("A");
+      }*/
+
+      console.log(AI_turn[0]);
+      //Only get to discard if opponent's guess is wrong
+      if(!(guess == AI_turn[1])) AI_turn[0].forEach(card => p2_hand.remove(card));
+
+      //Get selected cards, ask if play ace as 1 or 11
+      //calculate AI's guess
+      //compare AI's guess against selected cards
+
+      while((p2_hand.cards.length < 5) && player_decks[1].cards.length) p2_hand.add(player_decks[1].draw());
+
+    };
 
 </script>
 
