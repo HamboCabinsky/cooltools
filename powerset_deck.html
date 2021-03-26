@@ -98,6 +98,8 @@
         return this.cards.splice(rem_index,1)[0];
       };
 
+
+
       //Helper function for all_possible_plays, simply converts
       //  str[] of card names to an int/[] array of corresponding score values
       function conv2Scores(subSet)
@@ -188,7 +190,7 @@
 
       //given a card_set, returns a frequency distribution of all possible scores
       //  producable with the given set of cards
-      cardset.prototype.play_freq_distribution = function()
+      cardset.prototype.play_freq_distribution = function(sortby="value")
       {
         let plays = this.all_possible_plays();
         let play_freq_dict = {};
@@ -203,7 +205,10 @@
         let scores = Object.keys(play_freq_dict).map(key => [key,play_freq_dict[key]]);
 
         //custom defined comparator to sort by 2nd element of each []
-        scores.sort((first, second) => second[1]-first[1]);
+        if(sortby == "value") 
+          scores.sort((first, second) => second[1]-first[1]);
+        else
+          scores.sort((first, second) => second[0]-first[0]);
         return scores;
       };
 
@@ -290,6 +295,11 @@
       let hand = function(pos = null){
         CardSet.call(this);
         this.pos = pos;
+        //indices of selected cards
+        this.selected = [];
+        //x & y where each card begins and ends
+        this.card_dimensions = [];
+        
       };
 
       hand.prototype = Object.create(CardSet.prototype);
@@ -300,12 +310,44 @@
         let curr_x = this.pos[0];
         for(let i = 0; i < this.cards.length; i++)
         {
+          noStroke();
+          if(this.selected[i]){
+            stroke(color(255,255,0));
+            strokeWeight(2);
+          }else{
+            stroke(color(0,0,0));
+            strokeWeight(1);
+          }
           fill(color(245,245,255));
           rect(curr_x, this.pos[1], 50, 100);
+          
           fill(color(0,0,0));
           text(this.cards[i],curr_x+5,this.pos[1]+10);
           curr_x += 50;
+          stroke(color(0,0,0));
+          strokeWeight(1);
         }
+
+      };
+
+      hand.prototype.update_dims = function(){
+        let curr_x;
+        if(this.pos != null) {
+          curr_x = this.pos[0];
+          for(let i = 0; i < this.cards.length; i++){
+            this.card_dimensions.push([curr_x, this.pos[1], curr_x+50, this.pos[1]+100]);
+            curr_x += 50;
+          }
+        }
+      };
+
+      hand.prototype.get_selected = function(){
+        let sel_elems = [];
+        for(let i = 0; i < this.selected.length; i++)
+        {
+          if(this.selected[i]) sel_elems.push(this.cards[i]);
+        }
+        return sel_elems;
       };
 
       return hand;
@@ -329,14 +371,17 @@
       player_decks[0].pos = [width-90,height-150];
       player_decks[1].pos = [40,50];
 
-      p1_hand = new Hand([50, height-150]);
+      p1_hand = new Hand([150, height-150]);
       p2_hand = new Hand([100,50]);
 
-      max_hand = 5;
+      max_hand = 3;
       for(let i = 0; i < max_hand; i++){
         p1_hand.add(player_decks[0].draw());
         p2_hand.add(player_decks[1].draw());
-      } 
+      }
+      p1_hand.update_dims();
+
+      p1_hand.selected = [0,0,0];
 
       status = "";
 
@@ -360,28 +405,96 @@
       //get number input
       let guess = parseInt(input.value(),10);
       input.value('');
-      console.log(guess);
+
       if(Number.isNaN(guess))  return;
       //calculate AI's turn
       let AI_turn = p2_hand.get_random_play();
-      console.log(AI_turn);
-      status = "AI played a " + AI_turn[1] + " You Guessed: " + guess;
+      //reroll once if score is 0
+      if(!AI_turn[1]) AI_turn = p2_hand.get_random_play();
+
+      status = "AI played a: " + AI_turn[1] + " You Guessed: " + guess;
+
+      //calculate AI's Guess
+      let roll = Math.random();
+      let AI_guess;
+      let freq;
+      //pick a high scoring possible score
+      if(roll < .4){
+        freq = p1_hand.play_freq_distribution("key");
+        ind = Math.floor(Math.random()*(p1_hand.cards.length *0.2));
+        AI_guess = freq[ind][0];
+      //pick a common possible score
+      }else if(roll < .8){
+        freq = p1_hand.play_freq_distribution();
+        ind = Math.floor(Math.random()*(p1_hand.cards.length *0.2));
+        AI_guess = freq[ind][0];
+      //pick a random possible score
+      }else{
+        freq = p1_hand.play_freq_distribution();
+        AI_guess = freq[Math.floor(Math.random()*freq.length)][0];
+      }
       
-      /*//compare against input
-      if(guess == AI_turn[1]){
-        player_decks[1].add("A");
-      }*/
-
-      console.log(AI_turn[0]);
-      //Only get to discard if opponent's guess is wrong
-      if(!(guess == AI_turn[1])) AI_turn[0].forEach(card => p2_hand.remove(card));
-
       //Get selected cards, ask if play ace as 1 or 11
-      //calculate AI's guess
-      //compare AI's guess against selected cards
+      let sel_elems = p1_hand.get_selected();
+      let played_score = 0;
+      let val_dict = p1_hand.get_card_values();
 
-      while((p2_hand.cards.length < 5) && player_decks[1].cards.length) p2_hand.add(player_decks[1].draw());
+      //Get players played score
+      for(let i = 0; i < sel_elems.length; i++){
+        if(sel_elems[i] == "A"){
+          let val = prompt("You selected an ace, enter 1 or 11 to choose what value to play it as:");
+          if(val == "11") played_score += 11;
+          else played_score += 1;
+        }else{
+          if(val_dict[sel_elems[i]]) played_score += val_dict[sel_elems[i]];
+        }
+      }
 
+      status += "\n AI Guessed a: " + AI_guess + " You Played: " + played_score;
+
+      //console.log(AI_turn[0]);
+      //Only get to discard if opponent's guess is wrong
+      if(guess != AI_turn[1]){ 
+        AI_turn[0].forEach(card => player_decks[0].add(p2_hand.remove(card)));
+        player_decks[0].shuffle();
+      }
+
+      //compare AI's guess against played score
+      if(AI_guess != played_score){
+        sel_elems.forEach(card => player_decks[1].add(p1_hand.remove(card)));
+        player_decks[1].shuffle();
+      }
+
+      while((p1_hand.cards.length < max_hand) && player_decks[0].cards.length) p1_hand.add(player_decks[0].draw());
+
+      while((p2_hand.cards.length < max_hand) && player_decks[1].cards.length) p2_hand.add(player_decks[1].draw());
+
+      if(!p1_hand.cards.length && !player_decks[0].length)
+      {
+        status += "\n YOU WIN!!";
+      }
+      if(!p2_hand.cards.length && !player_decks[1].length)
+      {
+        status += "\n YOU LOSE!!";
+      }
+
+
+    };
+
+    function contains(dimensions,x,y){
+      if((x > dimensions[0]) && (x < dimensions[2]) && (y > dimensions[1]) && (y < dimensions[3]))  return true;
+      else return false; 
+    };
+
+    function mouseClicked()
+    {
+      for(let i = 0; i < p1_hand.card_dimensions.length; i++)
+      {
+        if (contains(p1_hand.card_dimensions[i], mouseX, mouseY)){
+          if(p1_hand.selected[i]) p1_hand.selected[i] = 0; 
+          else p1_hand.selected[i] = 1;
+        }
+      }
     };
 
 </script>
